@@ -2,35 +2,37 @@
 #define DATABASE_H
 
 #include <iostream>
-#include <vector>
 #include <fstream>
+#include <string>
+using namespace std;
 
 class Patient {
 private:
-    std::string name;
+    string name;
     int age;
-    std::string diagnosis;
-
+    string diagnosis;
+    
 public:
     Patient();
-
-    friend std::ostream& operator<<(std::ostream& out, const Patient& p);
-    friend std::istream& operator>>(std::istream& in, Patient& p);
-
-    std::string getName() const;
+    friend ostream& operator<<(ostream& out, const Patient& p);
+    friend istream& operator>>(istream& in, Patient& p);
+    
+    string getName() const;
     int getAge() const;
 
     void edit();
 };
-
 class Database {
 private:
-    std::vector<Patient> data;
-
+    Patient* arr; 
+    int size;
+    int capacity;
+    
 public:
-    void loadFromFile(const std::string& filename);
-    void saveToFile(const std::string& filename);
-
+    Database();
+    ~Database(); 
+    void loadFromFile(const string& filename);
+    void saveToFile(const string& filename);
     void print();
     void add();
     void remove();
