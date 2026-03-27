@@ -1,5 +1,5 @@
 all:
-	g++ main.cс database.cс -o app
+	g++ main.cpp database.cpp -o app
 
 clean:
 	rm -f app
