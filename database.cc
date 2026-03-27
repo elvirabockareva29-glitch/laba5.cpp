@@ -1,125 +1,214 @@
 #include "database.h"
+
 Patient::Patient() {
+    name = "";
     age = 0;
+    diagnosis = "";
 }
-std::ostream& operator<<(std::ostream& out, const Patient& p) {
+
+ostream& operator<<(ostream& out, const Patient& p) {
     out << p.name << " " << p.age << " " << p.diagnosis;
     return out;
 }
-std::istream& operator>>(std::istream& in, Patient& p) {
-    std::cout << "Имя: ";
-    in >> p.name;
 
-    std::cout << "Возраст: ";
-    in >> p.age;
-
-    std::cout << "Диагноз: ";
-    in >> p.diagnosis;
-
+istream& operator>>(istream& in, Patient& p) {
+    in >> p.name >> p.age >> p.diagnosis;
     return in;
 }
-std::string Patient::getName() const {
+
+string Patient::getName() const {
     return name;
 }
+
 int Patient::getAge() const {
     return age;
 }
+
 void Patient::edit() {
-    std::cout << "Новое имя: ";
-    std::cin >> name;
-
-    std::cout << "Новый возраст: ";
-    std::cin >> age;
-
-    std::cout << "Новый диагноз: ";
-    std::cin >> diagnosis;
-}
-void Database::loadFromFile(const std::string& filename) {
-    std::ifstream file(filename);
-
-    if (!file) return;
-
-    Patient p;
-    while (file >> p) {
-        data.push_back(p);
-    }
+    cout << "Новое имя: ";
+    cin >> name;
+    cout << "Новый возраст: ";
+    cin >> age;
+    cout << "Новый диагноз: ";
+    cin >> diagnosis;
 }
 
-void Database::saveToFile(const std::string& filename) {
-    std::ofstream file(filename);
-
-    for (int i = 0; i < data.size(); i++) {
-        file << data[i] << std::endl;
-    }
+Database::Database() {
+    arr = nullptr;
+    size = 0;
+    capacity = 0;
 }
 
-void Database::print() {
-    if (data.empty()) {
-        std::cout << "База пустая\n";
+Database::~Database() {
+    delete[] arr;
+}
+
+void Database::loadFromFile(const string& filename) {
+    ifstream file(filename);
+    
+    if (!file) {
         return;
     }
 
-    for (int i = 0; i < data.size(); i++) {
-        std::cout << i + 1 << ") " << data[i] << std::endl;
+    Patient temp;
+    int count = 0;
+    while (file >> temp) {
+        count++;
+    }
+    
+    if (count == 0) {
+        return;
+    }
+    
+    delete[] arr;
+    size = count;
+    capacity = count;
+    arr = new Patient[capacity];
+    
+    file.clear();
+    file.seekg(0);
+ 
+    for (int i = 0; i < size; i++) {
+        file >> arr[i];
+    }
+    
+    file.close();
+}
+
+void Database::saveToFile(const string& filename) {
+    ofstream file(filename);
+    
+    for (int i = 0; i < size; i++) {
+        file << arr[i] << endl;
+    }
+    
+    file.close();
+}
+
+void Database::print() {
+    if (size == 0) {
+        cout << "База данных пуста!\n";
+        return;
+    }
+    
+    cout << "\n=== СПИСОК ПАЦИЕНТОВ ===\n";
+    for (int i = 0; i < size; i++) {
+        cout << i + 1 << ". " << arr[i] << endl;
     }
 }
 
 void Database::add() {
-    Patient p;
-    std::cin >> p;
-    data.push_back(p);
+    if (size == capacity) {
+        int newCapacity = (capacity == 0) ? 1 : capacity * 2;
+        Patient* newArr = new Patient[newCapacity];
+        
+        for (int i = 0; i < size; i++) {
+            newArr[i] = arr[i];
+        }
+        
+        delete[] arr;
+        arr = newArr;
+        capacity = newCapacity;
+    }
+    
+    cout << "Введите имя, возраст и диагноз через пробел: ";
+    cin >> arr[size];
+    size++;
+    
+    cout << "Пациент добавлен!\n";
 }
 
 void Database::remove() {
-    int n;
-    std::cout << "Номер: ";
-    std::cin >> n;
-
-    if (n < 1 || n > data.size()) {
-        std::cout << "Ошибка\n";
+    if (size == 0) {
+        cout << "Нет записей для удаления!\n";
         return;
     }
-
-    data.erase(data.begin() + n - 1);
+    
+    int num;
+    cout << "Введите номер для удаления (1-" << size << "): ";
+    cin >> num;
+    
+    if (num < 1 || num > size) {
+        cout << "Неверный номер!\n";
+        return;
+    }
+    
+    for (int i = num - 1; i < size - 1; i++) {
+        arr[i] = arr[i + 1];
+    }
+    
+    size--;
+    cout << "Запись удалена!\n";
 }
 
 void Database::edit() {
-    int n;
-    std::cout << "Номер: ";
-    std::cin >> n;
-
-    if (n < 1 || n > data.size()) {
-        std::cout << "Ошибка\n";
+    if (size == 0) {
+        cout << "Нет записей для редактирования!\n";
         return;
     }
-
-    data[n - 1].edit();
+    
+    int num;
+    cout << "Введите номер для редактирования (1-" << size << "): ";
+    cin >> num;
+    
+    if (num < 1 || num > size) {
+        cout << "Неверный номер!\n";
+        return;
+    }
+    
+    cout << "Редактирование записи " << num << ":\n";
+    arr[num - 1].edit();
+    cout << "Запись отредактирована!\n";
 }
 
 void Database::search() {
+    if (size == 0) {
+        cout << "База данных пуста!\n";
+        return;
+    }
+    
     int choice;
-    std::cout << "1. Имя\n2. Возраст\n";
-    std::cin >> choice;
-
+    cout << "\nПоиск по:\n";
+    cout << "1. Имени\n";
+    cout << "2. Возрасту\n";
+    cout << "Выбор: ";
+    cin >> choice;
+    
     if (choice == 1) {
-        std::string name;
-        std::cout << "Имя: ";
-        std::cin >> name;
-
-        for (int i = 0; i < data.size(); i++) {
-            if (data[i].getName() == name) {
-                std::cout << data[i] << std::endl;
+        string name;
+        cout << "Введите имя: ";
+        cin >> name;
+        
+        bool found = false;
+        for (int i = 0; i < size; i++) {
+            if (arr[i].getName() == name) {
+                cout << i + 1 << ". " << arr[i] << endl;
+                found = true;
             }
         }
-    } else if (choice == 2) {
+        
+        if (!found) {
+            cout << "Пациент с именем '" << name << "' не найден!\n";
+        }
+    }
+    else if (choice == 2) {
         int age;
-        std::cout << "Возраст: ";
-        std::cin >> age;
-
-        for (int i = 0; i < data.size(); i++) {
-            if (data[i].getAge() == age) {
-                std::cout << data[i] << std::endl;
+        cout << "Введите возраст: ";
+        cin >> age;
+        
+        bool found = false;
+        for (int i = 0; i < size; i++) {
+            if (arr[i].getAge() == age) {
+                cout << i + 1 << ". " << arr[i] << endl;
+                found = true;
             }
         }
+        
+        if (!found) {
+            cout << "Пациенты с возрастом " << age << " не найдены!\n";
+        }
+    }
+    else {
+        cout << "Неверный выбор!\n";
     }
 }
